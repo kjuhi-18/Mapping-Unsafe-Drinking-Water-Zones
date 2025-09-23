@@ -85,7 +85,6 @@ This project leverages the **CGWB (2023) groundwater quality dataset** to identi
 ## 👨‍👩‍👦 Team  
 
 - **Kashif Kamran**  
-- **Kashish Chelwani** 
 - **Kunal Jhindal** 
 
 ---
