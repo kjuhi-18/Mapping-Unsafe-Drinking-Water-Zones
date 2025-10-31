@@ -18,5 +18,5 @@ python-dateutil
 watchdog
 pyarrow
 protobuf
-st-aggrid
+streamlit-aggrid
 transformers
