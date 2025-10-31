@@ -18,3 +18,4 @@ python-dateutil
 watchdog
 pyarrow
 protobuf
+st-aggrid
