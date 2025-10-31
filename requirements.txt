@@ -13,7 +13,7 @@ reportlab
 PyPDF2
 requests
 altair
-pillow0
+pillow
 python-dateutil
 watchdog
 pyarrow
