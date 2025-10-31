@@ -19,3 +19,4 @@ watchdog
 pyarrow
 protobuf
 st-aggrid
+transformers
