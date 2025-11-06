@@ -369,33 +369,58 @@ if st.session_state.logged_in:
         missing["% Missing"] = (missing["Missing Values"] / len(df_eda)) * 100
         st.dataframe(missing)
 
-    # Univariate analysis
-        st.subheader("📈 Univariate Analysis")
-        numeric_cols = df_eda.select_dtypes(include=[np.number]).columns.tolist()
+# Univariate analysis
+        st.subheader("📈 Univariate Analysis (Univariate Analysis)")
+# 1. Get all numeric columns
+        all_numeric_cols = df_eda.select_dtypes(include=[np.number]).columns.tolist()
+
+# 2. Define the columns you want to EXCLUDE from the analysis dropdown
+# This list must be updated if other non-feature numeric columns appear (e.g., location codes)
+        EXCLUDE_COLS = ["Unnamed: 0", "S. No.", "Year"]
+
+# 3. Create the final list of numeric columns for the dropdown
+        numeric_cols = [col for col in all_numeric_cols if col not in EXCLUDE_COLS]
+
         if numeric_cols:
+    # Use the filtered 'numeric_cols' for the selectbox
             selected_col = st.selectbox("Select Parameter", numeric_cols)
+    
+    # ... (rest of your plotting code remains the same)
             col1, col2 = st.columns(2)
             with col1:
                 st.plotly_chart(px.histogram(df_eda, x=selected_col, nbins=30,
-                                         title=f"Distribution of {selected_col}",
-                                         marginal="box"),
+                                            title=f"Distribution of {selected_col}",
+                                            marginal="box"),
                                 use_container_width=True)
             with col2:
                 st.plotly_chart(px.box(df_eda, y=selected_col,
-                                   title=f"Boxplot of {selected_col}"),
+                                    title=f"Boxplot of {selected_col}"),
                                 use_container_width=True)
         else:
-            st.info("No numeric columns detected in the dataset.")
+            st.info("No numeric columns available for univariate analysis.")
 
     # Correlation analysis
         st.subheader("📊 Correlation Heatmap (Numeric Parameters)")
+
+# 1. Define columns to exclude from correlation analysis
+        EXCLUDE_COLS = ["Unnamed: 0", "S. No.", "Year"]
+
+# 2. Get all numeric columns
         numeric_df = df_eda.select_dtypes(include=[np.number])
-        if not numeric_df.empty:
-            corr = numeric_df.corr().round(2)
+
+# 3. Filter out the excluded columns
+# Use 'errors="ignore"' in case a column is already dropped or missing
+        df_corr_filtered = numeric_df.drop(columns=EXCLUDE_COLS, errors='ignore')
+
+        if not df_corr_filtered.empty:
+    # 4. Calculate correlation matrix using the filtered DataFrame
+            corr = df_corr_filtered.corr().round(2)
+    
+    # 5. Generate the heatmap
             fig_corr = px.imshow(corr, text_auto=True, title="Correlation Matrix")
             st.plotly_chart(fig_corr, use_container_width=True)
         else:
-            st.info("No numeric data available for correlation analysis.")
+            st.info("No relevant numeric data available for correlation analysis after filtering.")
 
     # Bivariate analysis
         st.subheader("🔍 Bivariate Relationship Explorer")
@@ -491,12 +516,20 @@ if st.session_state.logged_in:
             co3 = st.number_input("CO3 (mg/L)", min_value=0.0)
 
         with col3:
-            year = st.number_input("Year", min_value=2000, max_value=2100, step=1)
-            latitude = st.number_input("Latitude", step=0.0001)
-            longitude = st.number_input("Longitude", step=0.0001)
-            state = st.text_input("State")
-            district = st.text_input("District")
-            location = st.text_input("Location")
+    # --- UNWANTED INPUTS REMOVED ---
+    # year = st.number_input("Year", min_value=2000, max_value=2100, step=1)
+    # latitude = st.number_input("Latitude", step=0.0001)
+    # longitude = st.number_input("Longitude", step=0.0001)
+    # state = st.text_input("State")
+    # district = st.text_input("District")
+    # location = st.text_input("Location")
+    # --- Placeholder assignment for prediction DataFrame consistency ---
+            year = 0
+            latitude = 0.0
+            longitude = 0.0
+            state = "N/A"
+            district = "N/A"
+            location = "N/A"
 
     # =======================
     # Create DataFrame
@@ -573,8 +606,6 @@ if st.session_state.logged_in:
                 st.success(f"✅ **Model Prediction:** The water is SAFE for drinking (Confidence: {prob:.2f}%)")
             else:
                 st.error(f"❌ **Model Prediction:** The water is UNSAFE for drinking (Confidence: {prob:.2f}%)")
-
-
 
 
     # --------------------------
@@ -690,7 +721,15 @@ if st.session_state.logged_in:
         st.divider()
         st.header("🎛️ Smart Filters & Interactive Controls")
 
-        numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+# Define columns to exclude from filtering controls and analysis
+        EXCLUDE_COLS = ["Unnamed: 0", "S. No.", "Year"]
+
+# Get all numeric columns
+        all_numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+
+# 🛑 FIX: Filter the numeric columns to exclude identifiers
+        numeric_cols = [col for col in all_numeric_cols if col not in EXCLUDE_COLS]
+
         categorical_cols = df.select_dtypes(include=['object']).columns.tolist()
 
         with st.expander("🔍 Filter Your Data"):
@@ -707,17 +746,25 @@ if st.session_state.logged_in:
                     selected_district = st.selectbox("Select District", ["All"] + sorted(df["District"].dropna().unique().tolist()))
 
             with col3:
-                selected_range_col = st.selectbox("Select Numeric Column to Filter", numeric_cols)
-                min_val, max_val = df[selected_range_col].min(), df[selected_range_col].max()
-                value_range = st.slider(f"Filter {selected_range_col}", float(min_val), float(max_val), (float(min_val), float(max_val)))
+        # Use the filtered 'numeric_cols' list here
+                if numeric_cols:
+                    selected_range_col = st.selectbox("Select Numeric Column to Filter", numeric_cols)
+            # The rest of the filtering logic remains the same, using 'selected_range_col'
+                    min_val, max_val = df[selected_range_col].min(), df[selected_range_col].max()
+                    value_range = st.slider(f"Filter {selected_range_col}", float(min_val), float(max_val), (float(min_val), float(max_val)))
+                else:
+                    selected_range_col = None # Ensure this is set if no columns are available
+                    st.info("No numeric columns available for range filtering.")
 
-        # Apply Filters
+
+    # Apply Filters (Only apply range filter if a column was selected)
             filtered_df = df.copy()
             if selected_state and selected_state != "All":
                 filtered_df = filtered_df[filtered_df["State"] == selected_state]
             if selected_district and selected_district != "All":
                 filtered_df = filtered_df[filtered_df["District"] == selected_district]
-            if selected_range_col:
+        
+            if selected_range_col: # Check if a column was actually selected/available
                 filtered_df = filtered_df[
                     (filtered_df[selected_range_col] >= value_range[0]) & 
                     (filtered_df[selected_range_col] <= value_range[1])
@@ -732,14 +779,24 @@ if st.session_state.logged_in:
         st.divider()
         st.header("📈 Summary Insights")
 
+# Define columns to exclude from statistical summaries
+        EXCLUDE_COLS = ["Unnamed: 0", "S. No.", "Year"]
+
+# Create a filtered DataFrame for statistics, excluding the identifiers
+        df_stats = filtered_df.drop(columns=EXCLUDE_COLS, errors='ignore')
+
         with st.expander("📊 Basic Statistics", expanded=True):
-            st.write(filtered_df.describe())
+            # 🛑 FIX APPLIED HERE: Use the cleaned df_stats DataFrame
+            st.dataframe(df_stats.describe())
 
         with st.expander("📉 Correlation Heatmap"):
             import seaborn as sns
             import matplotlib.pyplot as plt
 
-            corr = filtered_df[numeric_cols].corr()
+    # Note: If you have already fixed the 'numeric_cols' list in the "Smart Filters"
+    # section (as per our last conversation), the code below is fine.
+    # Otherwise, you should ensure 'numeric_cols' also excludes EXCLUDE_COLS.
+            corr = filtered_df[numeric_cols].corr() 
             fig, ax = plt.subplots(figsize=(8, 5))
             sns.heatmap(corr, cmap="coolwarm", annot=False)
             st.pyplot(fig)
