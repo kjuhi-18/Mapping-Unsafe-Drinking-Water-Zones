@@ -43,15 +43,6 @@ By combining **data science**, **machine learning**, and **geo-mapping**, it ide
 
 ---
 
-## 📸 Preview
-
-<p align="center">
-  <img src="https://github.com/kjuhi-18/Mapping-Unsafe-Drinking-Water-Zones/assets/preview.gif" width="85%">
-</p>
-
-*(Example — replace with your actual dashboard screenshots)*  
-
----
 
 ## 📂 Repository Structure
 
